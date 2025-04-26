@@ -1,0 +1,41 @@
+version: '2.4'
+
+services:
+  database:
+    image: postgres:16
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB:       coder
+    volumes:
+      - coder_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U postgres -d coder"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  coder:
+    image: ghcr.io/coder/coder:latest
+    restart: always
+    depends_on:
+      database:
+        condition: service_started
+    ports:
+      - "7080:7080"
+    environment:
+      CODER_PG_CONNECTION_URL: "postgresql://postgres:postgres@database/coder?sslmode=disable"
+      CODER_HTTP_ADDRESS:      "0.0.0.0:7080"
+      CODER_ACCESS_URL:        "http://192.168.7.246:7080" # Tu IP local o hostname
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - coder_home:/home/coder
+    labels:
+      io.balena.features.balena-socket: '1'
+
+volumes:
+  coder_data:
+  coder_home:
