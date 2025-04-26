@@ -13,13 +13,14 @@ services:
     volumes:
       - coder_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL","pg_isready -U postgres -d coder"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d coder"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   coder:
     image: ghcr.io/coder/coder:latest
+    user: root
     restart: always
     depends_on:
       database:
@@ -29,9 +30,8 @@ services:
     environment:
       CODER_PG_CONNECTION_URL: "postgresql://postgres:postgres@database/coder?sslmode=disable"
       CODER_HTTP_ADDRESS:      "0.0.0.0:7080"
-      CODER_ACCESS_URL:        "http://DEVICE_IP:7080" # <- Attention!
+      CODER_ACCESS_URL:        "http://DEVICE_IP:7080" # <- IP or Hostname
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - coder_home:/home/coder
     labels:
       io.balena.features.balena-socket: '1'
